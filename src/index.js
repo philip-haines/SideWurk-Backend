@@ -49,7 +49,7 @@ const typeDefs = gql`
 	}
 
 	input SignUpInput {
-		email: String
+		email: String!
 		password: String!
 		name: String!
 		avatar: String
@@ -124,7 +124,9 @@ const resolvers = {
 				password: hashedPassword,
 			};
 
-			const result = await database.collection("Users").insert(newUser);
+			const result = await database
+				.collection("Users")
+				.insertOne(newUser);
 			const user = result.ops[0];
 			return {
 				user,
@@ -165,7 +167,7 @@ const resolvers = {
 
 				const result = await database
 					.collection("TaskList")
-					.insert(newTaskList);
+					.insertOne(newTaskList);
 				return result.ops[0];
 			}
 		},
@@ -242,7 +244,7 @@ const resolvers = {
 
 				const result = await database
 					.collection("Task")
-					.insert(newTask);
+					.insertOne(newTask);
 				return result.ops[0];
 			}
 		},
