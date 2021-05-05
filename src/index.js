@@ -32,6 +32,7 @@ const typeDefs = gql`
 	type Query {
 		myTaskLists: [TaskList]
 		getTaskList(id: ID!): TaskList!
+		getUsers(input: GetUserSearch!): [User]
 	}
 
 	type Mutation {
@@ -59,6 +60,10 @@ const typeDefs = gql`
 	input SignInInput {
 		email: String!
 		password: String!
+	}
+
+	input GetUserSearch {
+		email: String
 	}
 
 	type AuthenticateUser {
@@ -105,6 +110,21 @@ const resolvers = {
 				return taskLists;
 			}
 		},
+
+		getUsers: async (_, { input }, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please sign in");
+			} else {
+				const foundUsers = await database
+					.collection("Users")
+					.find({ email: /input.email/ })
+					.toArray();
+				console.log(input.email);
+				console.log(foundUsers);
+				return foundUsers;
+			}
+		},
+
 		getTaskList: async (_, { id }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
@@ -262,13 +282,13 @@ const resolvers = {
 			}
 		},
 
-		deleteTask: async (_, { id }, { database, user }) => {
+		deleteTask: async (_, task, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
 				await database
 					.collection("Task")
-					.removeOne({ _id: ObjectID(id) });
+					.removeOne({ _id: ObjectID(task.id) });
 				return true;
 			}
 		},
