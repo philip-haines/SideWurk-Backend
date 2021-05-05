@@ -63,7 +63,7 @@ const typeDefs = gql`
 	}
 
 	input GetUserSearch {
-		email: String
+		text: String
 	}
 
 	type AuthenticateUser {
@@ -115,13 +115,14 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
-				const foundUsers = await database
-					.collection("Users")
-					.find({ email: /input.email/ })
-					.toArray();
-				console.log(input.email);
-				console.log(foundUsers);
-				return foundUsers;
+				const foundUsers =
+					(await database.collection("Users").find({
+						email: { $regex: input.text, $options: "i" },
+					})) ||
+					(await database.collection("Users").find({
+						name: { $regex: input.text, $options: "i" },
+					}));
+				return foundUsers.toArray();
 			}
 		},
 
