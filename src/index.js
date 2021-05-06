@@ -130,6 +130,7 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
+				console.log("cooool");
 				return await database
 					.collection("TaskList")
 					.findOne({ _id: ObjectID(id) });
