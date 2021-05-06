@@ -32,7 +32,7 @@ const typeDefs = gql`
 	type Query {
 		myTaskLists: [TaskList]
 		getTaskList(id: ID!): TaskList!
-		getUsers(input: GetUserSearch!): [User]
+		getUsers(input: GetUserSearch): [User]
 	}
 
 	type Mutation {
@@ -115,14 +115,18 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
-				const foundUsers =
-					(await database.collection("Users").find({
-						email: { $regex: input.text, $options: "i" },
-					})) ||
-					(await database.collection("Users").find({
-						name: { $regex: input.text, $options: "i" },
-					}));
-				return foundUsers.toArray();
+				if (input.text === "") {
+					return [];
+				} else {
+					const foundUsers =
+						(await database.collection("Users").find({
+							email: { $regex: input.text, $options: "i" },
+						})) ||
+						(await database.collection("Users").find({
+							name: { $regex: input.text, $options: "i" },
+						}));
+					return foundUsers ? foundUsers.toArray() : [];
+				}
 			}
 		},
 
@@ -130,7 +134,6 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
-				console.log("cooool");
 				return await database
 					.collection("TaskList")
 					.findOne({ _id: ObjectID(id) });
@@ -309,7 +312,6 @@ const resolvers = {
 				.toArray();
 			const completed = tasks.filter((task) => task.isComplete);
 			if (tasks.length === 0) {
-				console.log(tasks);
 				return 0;
 			} else {
 				return 100 * (completed.length / tasks.length);
