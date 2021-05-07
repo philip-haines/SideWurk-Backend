@@ -87,6 +87,7 @@ const typeDefs = gql`
 		progress: Float!
 
 		users: [User!]!
+		blocks: [Block!]!
 		tasks: [Task!]!
 	}
 
@@ -94,7 +95,7 @@ const typeDefs = gql`
 		id: ID!
 		title: String!
 
-		tasks: [Task!]!
+		tasks: [Task!]
 	}
 
 	type Task {
@@ -348,6 +349,12 @@ const resolvers = {
 					database.collection("Users").findOne({ _id: userId })
 				)
 			),
+		blocks: async ({ _id }, _, { database }) =>
+			await database
+				.collection("Block")
+				.find({ taskListId: ObjectID(_id) })
+				.toArray(),
+
 		tasks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Task")
