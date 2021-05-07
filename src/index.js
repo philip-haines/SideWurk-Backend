@@ -44,7 +44,7 @@ const typeDefs = gql`
 		deleteTaskList(id: ID!): Boolean!
 		addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
 
-		createTask(content: String!, taskListId: ID!): Task!
+		createTask(content: String!, blockId: ID!): Task!
 		updateTask(id: ID!, content: String, isComplete: Boolean): Task!
 		deleteTask(id: ID!): Boolean!
 
@@ -88,14 +88,13 @@ const typeDefs = gql`
 
 		users: [User!]!
 		blocks: [Block!]!
-		tasks: [Task!]!
 	}
 
 	type Block {
 		id: ID!
 		title: String!
 
-		tasks: [Task!]
+		tasks: [Task!]!
 	}
 
 	type Task {
@@ -103,7 +102,7 @@ const typeDefs = gql`
 		content: String!
 		isComplete: Boolean!
 
-		taskList: TaskList!
+		block: Block!
 	}
 `;
 
@@ -267,13 +266,13 @@ const resolvers = {
 			}
 		},
 
-		createTask: async (_, { content, taskListId }, { database, user }) => {
+		createTask: async (_, { content, blockId }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
 				const newTask = {
 					content,
-					taskListId: ObjectID(taskListId),
+					blockId: ObjectID(blockId),
 					isComplete: false,
 				};
 
@@ -354,12 +353,6 @@ const resolvers = {
 				.collection("Block")
 				.find({ taskListId: ObjectID(_id) })
 				.toArray(),
-
-		tasks: async ({ _id }, _, { database }) =>
-			await database
-				.collection("Task")
-				.find({ taskListId: ObjectID(_id) })
-				.toArray(),
 	},
 
 	Block: {
@@ -373,10 +366,11 @@ const resolvers = {
 
 	Task: {
 		id: ({ _id, id }) => _id || id,
-		taskList: async ({ taskListId }, _, { database }) =>
-			await database
-				.collection("TaskList")
-				.findOne({ _id: ObjectID(taskListId) }),
+		block: async ({ blockId }, _, { database }) => {
+			return await database
+				.collection("Block")
+				.findOne({ _id: ObjectID(blockId) });
+		},
 	},
 };
 
