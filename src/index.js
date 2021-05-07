@@ -88,12 +88,6 @@ const typeDefs = gql`
 		tasks: [Task!]!
 	}
 
-	type Block {
-		id: ID!
-		title: String!
-		tasks: [Task!]!
-	}
-
 	type Task {
 		id: ID!
 		content: String!
@@ -329,6 +323,7 @@ const resolvers = {
 					database.collection("Users").findOne({ _id: userId })
 				)
 			),
+
 		tasks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Task")
