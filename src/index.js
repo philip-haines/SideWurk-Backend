@@ -47,6 +47,8 @@ const typeDefs = gql`
 		createTask(content: String!, taskListId: ID!): Task!
 		updateTask(id: ID!, content: String, isComplete: Boolean): Task!
 		deleteTask(id: ID!): Boolean!
+
+		createBlock(title: String!, taskListId: ID!): Block!
 	}
 
 	input SignUpInput {
@@ -91,6 +93,7 @@ const typeDefs = gql`
 	type Block {
 		id: ID!
 		title: String!
+
 		tasks: [Task!]!
 	}
 
@@ -303,6 +306,22 @@ const resolvers = {
 				return true;
 			}
 		},
+
+		createBlock: async (_, { title, taskListId }, { user, database }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please sign in");
+			} else {
+				const newBlock = {
+					title,
+					taskListId: ObjectID(taskListId),
+				};
+
+				const result = await database
+					.collection("Block")
+					.insertOne(newBlock);
+				return result.ops[0];
+			}
+		},
 	},
 
 	User: {
@@ -329,6 +348,15 @@ const resolvers = {
 					database.collection("Users").findOne({ _id: userId })
 				)
 			),
+		tasks: async ({ _id }, _, { database }) =>
+			await database
+				.collection("Task")
+				.find({ taskListId: ObjectID(_id) })
+				.toArray(),
+	},
+
+	Block: {
+		id: ({ _id, id }) => _id || id,
 		tasks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Task")
