@@ -88,6 +88,12 @@ const typeDefs = gql`
 		tasks: [Task!]!
 	}
 
+	type Block {
+		id: ID!
+		title: String!
+		tasks: [Task!]!
+	}
+
 	type Task {
 		id: ID!
 		content: String!
