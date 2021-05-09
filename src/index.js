@@ -49,6 +49,7 @@ const typeDefs = gql`
 		deleteTask(id: ID!): Boolean!
 
 		createBlock(title: String!, taskListId: ID!): Block!
+		deleteBlock(id: ID!): Boolean!
 	}
 
 	input SignUpInput {
@@ -322,6 +323,17 @@ const resolvers = {
 					.collection("Block")
 					.insertOne(newBlock);
 				return result.ops[0];
+			}
+		},
+
+		deleteBlock: async (_, block, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please log in");
+			} else {
+				await database
+					.collection("Block")
+					.removeOne({ _id: ObjectID(block.id) });
+				return true;
 			}
 		},
 	},
