@@ -94,6 +94,7 @@ const typeDefs = gql`
 		id: ID!
 		title: String!
 
+		taskList: TaskList!
 		tasks: [Task!]!
 	}
 
@@ -271,8 +272,8 @@ const resolvers = {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
 				const newTask = {
-					content,
 					blockId: ObjectID(blockId),
+					content,
 					isComplete: false,
 				};
 
@@ -287,6 +288,7 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
+				console.log(data);
 				const result = await database
 					.collection("Task")
 					.updateOne({ _id: ObjectID(data.id) }, { $set: data });
@@ -307,7 +309,7 @@ const resolvers = {
 			}
 		},
 
-		createBlock: async (_, { title, taskListId }, { user, database }) => {
+		createBlock: async (_, { title, taskListId }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
@@ -357,10 +359,15 @@ const resolvers = {
 
 	Block: {
 		id: ({ _id, id }) => _id || id,
+		taskList: async ({ taskListId }, _, { database }) => {
+			return await database
+				.collection("TaskList")
+				.findOne({ _id: ObjectID(taskListId) });
+		},
 		tasks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Task")
-				.find({ taskListId: ObjectID(_id) })
+				.find({ blockId: ObjectID(_id) })
 				.toArray(),
 	},
 
