@@ -44,9 +44,11 @@ const typeDefs = gql`
 		deleteTaskList(id: ID!): Boolean!
 		addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
 
-		createTask(content: String!, taskListId: ID!): Task!
+		createTask(content: String!, blockId: ID!): Task!
 		updateTask(id: ID!, content: String, isComplete: Boolean): Task!
 		deleteTask(id: ID!): Boolean!
+
+		createBlock(title: String!): Block!
 	}
 
 	input SignUpInput {
@@ -85,6 +87,14 @@ const typeDefs = gql`
 		progress: Float!
 
 		users: [User!]!
+		blocks: [Block!]!
+	}
+
+	type Block {
+		id: ID!
+		title: String!
+
+		taskList: TaskList!
 		tasks: [Task!]!
 	}
 
@@ -93,7 +103,7 @@ const typeDefs = gql`
 		content: String!
 		isComplete: Boolean!
 
-		taskList: TaskList!
+		block: Block!
 	}
 `;
 
@@ -257,13 +267,13 @@ const resolvers = {
 			}
 		},
 
-		createTask: async (_, { content, taskListId }, { database, user }) => {
+		createTask: async (_, { content, blockId }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
 				const newTask = {
+					blockId: ObjectID(blockId),
 					content,
-					taskListId: ObjectID(taskListId),
 					isComplete: false,
 				};
 
@@ -278,6 +288,7 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
+				console.log(data);
 				const result = await database
 					.collection("Task")
 					.updateOne({ _id: ObjectID(data.id) }, { $set: data });
@@ -295,6 +306,22 @@ const resolvers = {
 					.collection("Task")
 					.removeOne({ _id: ObjectID(task.id) });
 				return true;
+			}
+		},
+
+		createBlock: async (_, { title, taskListId }, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please sign in");
+			} else {
+				const newBlock = {
+					title,
+					taskListId: ObjectID(taskListId),
+				};
+
+				const result = await database
+					.collection("Block")
+					.insertOne(newBlock);
+				return result.ops[0];
 			}
 		},
 	},
@@ -324,19 +351,34 @@ const resolvers = {
 				)
 			),
 
+		blocks: async ({ _id }, _, { database }) =>
+			await database
+				.collection("Block")
+				.find({ taskListId: ObjectID(_id) })
+				.toArray(),
+	},
+
+	Block: {
+		id: ({ _id, id }) => _id || id,
+		taskList: async ({ taskListId }, _, { database }) => {
+			return await database
+				.collection("TaskList")
+				.findOne({ _id: ObjectID(taskListId) });
+		},
 		tasks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Task")
-				.find({ taskListId: ObjectID(_id) })
+				.find({ blockId: ObjectID(_id) })
 				.toArray(),
 	},
 
 	Task: {
 		id: ({ _id, id }) => _id || id,
-		taskList: async ({ taskListId }, _, { database }) =>
-			await database
-				.collection("TaskList")
-				.findOne({ _id: ObjectID(taskListId) }),
+		block: async ({ blockId }, _, { database }) => {
+			return await database
+				.collection("Block")
+				.findOne({ _id: ObjectID(blockId) });
+		},
 	},
 };
 
