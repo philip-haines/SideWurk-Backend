@@ -95,6 +95,7 @@ const typeDefs = gql`
 	type Block {
 		id: ID!
 		title: String!
+		progress: Float!
 
 		taskList: TaskList!
 		tasks: [Task!]!
@@ -386,6 +387,22 @@ const resolvers = {
 
 	Block: {
 		id: ({ _id, id }) => _id || id,
+
+		progress: async ({ _id }, _, { database }) => {
+			console.log(_id);
+			const tasks = await database
+				.collection("Task")
+				.find({ blockId: ObjectID(_id) })
+				.toArray();
+			const completed = tasks.filter((task) => task.isComplete);
+			if (tasks.length === 0) {
+				return 0;
+			} else {
+				const result = 100 * (completed.length / tasks.length);
+				console.log(result);
+				return result;
+			}
+		},
 		taskList: async ({ taskListId }, _, { database }) => {
 			return await database
 				.collection("TaskList")
