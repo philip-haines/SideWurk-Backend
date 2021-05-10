@@ -47,8 +47,6 @@ const typeDefs = gql`
 		createTask(content: String!, blockId: ID!): Task!
 		updateTask(id: ID!, content: String, isComplete: Boolean): Task!
 		deleteTask(id: ID!): Boolean!
-
-		createBlock(title: String!, taskListId: ID!): Block!
 	}
 
 	input SignUpInput {
@@ -90,6 +88,7 @@ const typeDefs = gql`
 		blocks: [Block!]!
 	}
 
+
 	type Block {
 		id: ID!
 		title: String!
@@ -97,6 +96,7 @@ const typeDefs = gql`
 		taskList: TaskList!
 		tasks: [Task!]!
 	}
+
 
 	type Task {
 		id: ID!
@@ -309,6 +309,7 @@ const resolvers = {
 			}
 		},
 
+
 		createBlock: async (_, { title, taskListId }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
@@ -324,6 +325,8 @@ const resolvers = {
 				return result.ops[0];
 			}
 		},
+=======
+
 	},
 
 	User: {
@@ -356,6 +359,7 @@ const resolvers = {
 				.find({ taskListId: ObjectID(_id) })
 				.toArray(),
 	},
+
 
 	Block: {
 		id: ({ _id, id }) => _id || id,
