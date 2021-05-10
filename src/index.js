@@ -49,6 +49,7 @@ const typeDefs = gql`
 		deleteTask(id: ID!): Boolean!
 
 		createBlock(title: String!, taskListId: ID!): Block!
+		updateBlock(id: ID!, title: String!): Block!
 		deleteBlock(id: ID!): Boolean!
 	}
 
@@ -326,6 +327,19 @@ const resolvers = {
 			}
 		},
 
+		updateBlock: async (_, { id, title }, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please log in");
+			} else {
+				const result = await database
+					.collection("Block")
+					.updateOne({ _id: ObjectID(id) }, { $set: { title } });
+				return await database
+					.collection("Block")
+					.findOne({ _id: ObjectID(id) });
+			}
+		},
+
 		deleteBlock: async (_, block, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
@@ -362,6 +376,7 @@ const resolvers = {
 					database.collection("Users").findOne({ _id: userId })
 				)
 			),
+
 		blocks: async ({ _id }, _, { database }) =>
 			await database
 				.collection("Block")
