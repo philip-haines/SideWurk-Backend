@@ -34,6 +34,7 @@ const typeDefs = gql`
 		myTaskLists(restaurantId: ID!): [TaskList]
 		getTaskList(id: ID!): TaskList!
 		getUsers(input: GetUserSearch): [User]
+		getRestaurant(id: ID!): Restaurant!
 	}
 
 	type Mutation {
@@ -165,6 +166,16 @@ const resolvers = {
 						}));
 					return foundUsers ? foundUsers.toArray() : [];
 				}
+			}
+		},
+
+		getRestaurant: async (_, { id }, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please log in");
+			} else {
+				return await database
+					.collection("Restaurant")
+					.findOne({ _id: ObjectID(id) });
 			}
 		},
 
