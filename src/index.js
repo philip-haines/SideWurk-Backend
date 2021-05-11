@@ -31,7 +31,7 @@ const getUserFromToken = async (token, database) => {
 const typeDefs = gql`
 	type Query {
 		myRestaurants: [Restaurant]
-		myTaskLists: [TaskList]
+		myTaskLists(restaurantId: ID!): [TaskList]
 		getTaskList(id: ID!): TaskList!
 		getUsers(input: GetUserSearch): [User]
 	}
@@ -137,13 +137,13 @@ const resolvers = {
 			}
 		},
 
-		myTaskLists: async (_, __, { database, user }) => {
+		myTaskLists: async (_, { restaurantId }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
 				const taskLists = await database
 					.collection("TaskList")
-					.find({ userIds: user._id })
+					.find({ restaurantId: ObjectID(restaurantId) })
 					.toArray();
 				return taskLists;
 			}
