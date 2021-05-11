@@ -412,7 +412,8 @@ const resolvers = {
 		taskLists: async ({ _id }, _, { database }) =>
 			await database
 				.collection("TaskList")
-				.find({ restaurantId: ObjectID(_id) }),
+				.find({ restaurantId: ObjectID(_id) })
+				.toArray(),
 	},
 
 	TaskList: {
