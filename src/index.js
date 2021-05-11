@@ -83,12 +83,22 @@ const typeDefs = gql`
 		role: String
 	}
 
+	type Restaurant {
+		id: ID!
+		title: String!
+
+		users: [User!]!
+		taskLists: [TaskList!]!
+	}
+
 	type TaskList {
 		id: ID!
 		title: String!
 
 		users: [User!]!
 		blocks: [Block!]!
+
+		restaurant: Restaurant!
 	}
 
 	type Block {
@@ -355,6 +365,21 @@ const resolvers = {
 		id: ({ _id, id }) => _id || id,
 	},
 
+	Restaurant: {
+		id: ({ _id, id }) => _id || id,
+		users: async ({ userIds }, _, { database }) =>
+			Promise.all(
+				userIds.map((userId) =>
+					database.collection("Users").findOne({ _id: userId })
+				)
+			),
+
+		taskLists: async ({ _id }, _, { database }) =>
+			await database
+				.collection("TaskList")
+				.find({ restaurantId: ObjectID(_id) }),
+	},
+
 	TaskList: {
 		id: ({ _id, id }) => _id || id,
 		users: async ({ userIds }, _, { database }) =>
@@ -369,6 +394,12 @@ const resolvers = {
 				.collection("Block")
 				.find({ taskListId: ObjectID(_id) })
 				.toArray(),
+
+		restaurant: async ({ restaurantId }, _, { database }) => {
+			return await database
+				.collection("Restaurant")
+				.findOne({ _id: ObjectID(restaurantId) });
+		},
 	},
 
 	Block: {
