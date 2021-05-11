@@ -39,7 +39,9 @@ const typeDefs = gql`
 		signUp(input: SignUpInput!): AuthenticateUser!
 		signIn(input: SignInInput!): AuthenticateUser!
 
-		createTaskList(title: String!): TaskList!
+		createRestaurant(title: String!): Restaurant!
+
+		createTaskList(restaurantId: ID!, title: String!): TaskList!
 		updateTaskList(id: ID!, title: String!): TaskList!
 		deleteTaskList(id: ID!): Boolean!
 		addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
@@ -202,14 +204,34 @@ const resolvers = {
 			}
 		},
 
-		createTaskList: async (_, { title }, { database, user }) => {
+		createRestaurant: async (_, { title }, { database, user }) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please sign in");
+			} else {
+				const newRestaurant = {
+					title,
+					userIds: [user._id],
+				};
+
+				const result = await database
+					.collection("Restaurant")
+					.insertOne(newRestaurant);
+				return result.ops[0];
+			}
+		},
+
+		createTaskList: async (
+			_,
+			{ title, restaurantId },
+			{ database, user }
+		) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
 			} else {
 				const newTaskList = {
 					title,
 					createdAt: new Date().toISOString(),
-					userIds: [user._id],
+					restaurantId: ObjectID(restaurantId),
 				};
 
 				const result = await database
