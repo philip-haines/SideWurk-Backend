@@ -41,6 +41,7 @@ const typeDefs = gql`
 		signIn(input: SignInInput!): AuthenticateUser!
 
 		createRestaurant(title: String!): Restaurant!
+		addUserToRestaurant(restaurantId: ID!, userId: ID!): Restaurant!
 
 		createTaskList(restaurantId: ID!, title: String!): TaskList!
 		updateTaskList(id: ID!, title: String!): TaskList!
@@ -275,6 +276,42 @@ const resolvers = {
 					.collection("TaskList")
 					.removeOne({ _id: ObjectID(id) });
 				return true;
+			}
+		},
+
+		addUserToRestaurant: async (
+			_,
+			{ restaurantId, userId },
+			{ database, user }
+		) => {
+			if (!user) {
+				throw new Error("Authentication Error. Please log in");
+			} else {
+				const restaurant = await database
+					.collection("Restaurant")
+					.findOne({ _id: ObjectID(restaurantId) });
+				if (!restaurant) {
+					return restaurant;
+				} else {
+					const foundUser = restaurant.userIds.find(
+						(databaseId) =>
+							databaseId.toString() === userId.toString()
+					);
+					if (!foundUser) {
+						await database.collection("Restaurant").updateOne(
+							{ _id: ObjectID(restaurantId) },
+							{
+								$push: {
+									userIds: ObjectID(userId),
+								},
+							}
+						);
+						restaurant.userIds.push(ObjectID(userId));
+						return restaurant;
+					} else {
+						return restaurant;
+					}
+				}
 			}
 		},
 
