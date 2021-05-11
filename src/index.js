@@ -41,6 +41,7 @@ const typeDefs = gql`
 		signIn(input: SignInInput!): AuthenticateUser!
 
 		createRestaurant(title: String!): Restaurant!
+		getRestaurant(id: ID!): Restaurant!
 		addUserToRestaurant(restaurantId: ID!, userId: ID!): Restaurant!
 
 		createTaskList(restaurantId: ID!, title: String!): TaskList!
