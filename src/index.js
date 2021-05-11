@@ -86,7 +86,6 @@ const typeDefs = gql`
 	type TaskList {
 		id: ID!
 		title: String!
-		progress: Float!
 
 		users: [User!]!
 		blocks: [Block!]!
@@ -291,7 +290,6 @@ const resolvers = {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
 			} else {
-				console.log(data);
 				const result = await database
 					.collection("Task")
 					.updateOne({ _id: ObjectID(data.id) }, { $set: data });
@@ -359,18 +357,6 @@ const resolvers = {
 
 	TaskList: {
 		id: ({ _id, id }) => _id || id,
-		progress: async ({ _id }, _, { database }) => {
-			const tasks = await database
-				.collection("Task")
-				.find({ taskListId: ObjectID(_id) })
-				.toArray();
-			const completed = tasks.filter((task) => task.isComplete);
-			if (tasks.length === 0) {
-				return 0;
-			} else {
-				return 100 * (completed.length / tasks.length);
-			}
-		},
 		users: async ({ userIds }, _, { database }) =>
 			Promise.all(
 				userIds.map((userId) =>
@@ -389,7 +375,6 @@ const resolvers = {
 		id: ({ _id, id }) => _id || id,
 
 		progress: async ({ _id }, _, { database }) => {
-			console.log(_id);
 			const tasks = await database
 				.collection("Task")
 				.find({ blockId: ObjectID(_id) })
@@ -399,7 +384,6 @@ const resolvers = {
 				return 0;
 			} else {
 				const result = 100 * (completed.length / tasks.length);
-				console.log(result);
 				return result;
 			}
 		},
