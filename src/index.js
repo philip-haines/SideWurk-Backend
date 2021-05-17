@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const typeDefs = require("../graphQl/typeDefs");
+const { signUp } = require("../graphQl/Mutations/user");
 const { addUserToRestaurant } = require("../graphQl/Mutations/restaurant");
 const {
 	myRestaurants,
@@ -15,9 +16,9 @@ dotenv.config();
 
 const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
 
-const getToken = (user) => {
-	return jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "30 days" });
-};
+// const getToken = (user) => {
+// 	return jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "30 days" });
+// };
 
 const getUserFromToken = async (token, database) => {
 	if (!token) {
@@ -45,22 +46,7 @@ const resolvers = {
 	},
 
 	Mutation: {
-		signUp: async (_, { input }, { database }) => {
-			const hashedPassword = bcrypt.hashSync(input.password);
-			const newUser = {
-				...input,
-				password: hashedPassword,
-			};
-
-			const result = await database
-				.collection("Users")
-				.insertOne(newUser);
-			const user = result.ops[0];
-			return {
-				user,
-				token: getToken(user),
-			};
-		},
+		signUp,
 		signIn: async (_, { input }, { database }) => {
 			const user = await database
 				.collection("Users")
