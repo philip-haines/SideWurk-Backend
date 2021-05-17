@@ -5,10 +5,15 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const typeDefs = require("../graphQl/typeDefs");
 const {
-	myRestaurants,
-	getRestaurant,
+	// myRestaurants,
+	// getRestaurant,
 	addUserToRestaurant,
 } = require("../graphQl/restaurant");
+
+const {
+	myRestaurants,
+	getRestaurant,
+} = require("../graphQl/Queries/restaurant");
 
 dotenv.config();
 
