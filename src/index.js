@@ -5,7 +5,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const typeDefs = require("../graphQl/typeDefs");
 const { signUp, signIn } = require("../graphQl/Mutations/user");
-const { addUserToRestaurant } = require("../graphQl/Mutations/restaurant");
+const {
+	addUserToRestaurant,
+	createRestaurant,
+} = require("../graphQl/Mutations/restaurant");
 const {
 	myRestaurants,
 	getRestaurant,
@@ -48,23 +51,7 @@ const resolvers = {
 	Mutation: {
 		signUp,
 		signIn,
-
-		createRestaurant: async (_, { title }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const newRestaurant = {
-					title,
-					userIds: [user._id],
-				};
-
-				const result = await database
-					.collection("Restaurant")
-					.insertOne(newRestaurant);
-				return result.ops[0];
-			}
-		},
-
+		createRestaurant,
 		addUserToRestaurant,
 
 		createTaskList: async (
