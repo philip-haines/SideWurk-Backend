@@ -9,6 +9,7 @@ const {
 	myRestaurants,
 	getRestaurant,
 } = require("../graphQl/Queries/restaurant");
+const { myTaskLists } = require("../graphQl/Queries/taskList");
 
 dotenv.config();
 
@@ -38,18 +39,7 @@ const resolvers = {
 	Query: {
 		myRestaurants,
 		getRestaurant,
-		myTaskLists: async (_, { restaurantId }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const taskLists = await database
-					.collection("TaskList")
-					.find({ restaurantId: ObjectID(restaurantId) })
-					.toArray();
-				return taskLists;
-			}
-		},
-
+		myTaskLists,
 		getUsers: async (_, { input }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please sign in");
