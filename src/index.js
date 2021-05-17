@@ -19,7 +19,11 @@ const {
 	updateTaskList,
 	deleteTaskList,
 } = require("../graphQl/Mutations/taskList");
-const { createTask } = require("../graphQl/Mutations/task");
+const {
+	createTask,
+	updateTask,
+	deleteTask,
+} = require("../graphQl/Mutations/task");
 const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
@@ -62,29 +66,8 @@ const resolvers = {
 		deleteTaskList,
 
 		createTask,
-		updateTask: async (_, data, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				const result = await database
-					.collection("Task")
-					.updateOne({ _id: ObjectID(data.id) }, { $set: data });
-				return await database
-					.collection("Task")
-					.findOne({ _id: ObjectID(data.id) });
-			}
-		},
-
-		deleteTask: async (_, task, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				await database
-					.collection("Task")
-					.removeOne({ _id: ObjectID(task.id) });
-				return true;
-			}
-		},
+		updateTask,
+		deleteTask,
 
 		createBlock: async (_, { title, taskListId }, { database, user }) => {
 			if (!user) {
