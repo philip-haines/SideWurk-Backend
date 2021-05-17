@@ -1,9 +1,16 @@
-const { ApolloServer, gql } = require("apollo-server");
+const { ApolloServer } = require("apollo-server");
 const { MongoClient, ObjectID } = require("mongodb");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const typeDefs = require("../graphQl/typeDefs");
+const { addUserToRestaurant } = require("../graphQl/Mutations/restaurant");
+const {
+	myRestaurants,
+	getRestaurant,
+} = require("../graphQl/Queries/restaurant");
+const { myTaskLists, getTaskList } = require("../graphQl/Queries/taskList");
+const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
 const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
@@ -28,166 +35,13 @@ const getUserFromToken = async (token, database) => {
 	}
 };
 
-const typeDefs = gql`
-	type Query {
-		myRestaurants: [Restaurant]
-		myTaskLists(restaurantId: ID!): [TaskList]
-		getTaskList(id: ID!): TaskList!
-		getUsers(input: GetUserSearch): [User]
-		getRestaurant(id: ID!): Restaurant!
-	}
-
-	type Mutation {
-		signUp(input: SignUpInput!): AuthenticateUser!
-		signIn(input: SignInInput!): AuthenticateUser!
-
-		createRestaurant(title: String!): Restaurant!
-		addUserToRestaurant(restaurantId: ID!, userId: ID!): Restaurant!
-
-		createTaskList(restaurantId: ID!, title: String!): TaskList!
-		updateTaskList(id: ID!, title: String!): TaskList!
-		deleteTaskList(id: ID!): Boolean!
-		addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
-
-		createTask(content: String!, blockId: ID!): Task!
-		updateTask(id: ID!, content: String, isComplete: Boolean): Task!
-		deleteTask(id: ID!): Boolean!
-
-		createBlock(title: String!, taskListId: ID!): Block!
-		updateBlock(id: ID!, title: String!): Block!
-		deleteBlock(id: ID!): Boolean!
-	}
-
-	input SignUpInput {
-		email: String!
-		password: String!
-		name: String!
-		avatar: String
-		role: String
-	}
-
-	input SignInInput {
-		email: String!
-		password: String!
-	}
-
-	input GetUserSearch {
-		text: String
-	}
-
-	type AuthenticateUser {
-		user: User!
-		token: String!
-	}
-
-	type User {
-		id: ID!
-		name: String!
-		email: String!
-		avatar: String
-		role: String
-	}
-
-	type Restaurant {
-		id: ID!
-		title: String!
-
-		users: [User!]!
-		taskLists: [TaskList!]!
-	}
-
-	type TaskList {
-		id: ID!
-		title: String!
-
-		users: [User!]!
-		blocks: [Block!]!
-
-		restaurant: Restaurant!
-	}
-
-	type Block {
-		id: ID!
-		title: String!
-		progress: Float!
-
-		taskList: TaskList!
-		tasks: [Task!]!
-	}
-
-	type Task {
-		id: ID!
-		content: String!
-		isComplete: Boolean!
-
-		block: Block!
-	}
-`;
-
 const resolvers = {
 	Query: {
-		myRestaurants: async (_, __, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const restaurants = await database
-					.collection("Restaurant")
-					.find({ userIds: user._id })
-					.toArray();
-				return restaurants;
-			}
-		},
-
-		myTaskLists: async (_, { restaurantId }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const taskLists = await database
-					.collection("TaskList")
-					.find({ restaurantId: ObjectID(restaurantId) })
-					.toArray();
-				return taskLists;
-			}
-		},
-
-		getUsers: async (_, { input }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				if (input.text === "") {
-					return [];
-				} else {
-					const foundUsers =
-						(await database.collection("Users").find({
-							email: { $regex: input.text, $options: "i" },
-						})) ||
-						(await database.collection("Users").find({
-							name: { $regex: input.text, $options: "i" },
-						}));
-					return foundUsers ? foundUsers.toArray() : [];
-				}
-			}
-		},
-
-		getRestaurant: async (_, { id }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				return await database
-					.collection("Restaurant")
-					.findOne({ _id: ObjectID(id) });
-			}
-		},
-
-		getTaskList: async (_, { id }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				return await database
-					.collection("TaskList")
-					.findOne({ _id: ObjectID(id) });
-			}
-		},
+		myRestaurants,
+		getRestaurant,
+		myTaskLists,
+		getUsers,
+		getTaskList,
 	},
 
 	Mutation: {
@@ -245,6 +99,8 @@ const resolvers = {
 			}
 		},
 
+		addUserToRestaurant,
+
 		createTaskList: async (
 			_,
 			{ title, restaurantId },
@@ -255,13 +111,14 @@ const resolvers = {
 			} else {
 				const newTaskList = {
 					title,
-					createdAt: new Date().toISOString(),
 					restaurantId: ObjectID(restaurantId),
 				};
-
+				console.log(newTaskList);
 				const result = await database
 					.collection("TaskList")
 					.insertOne(newTaskList);
+
+				console.log(result.ops[0]);
 				return result.ops[0];
 			}
 		},
@@ -287,78 +144,6 @@ const resolvers = {
 					.collection("TaskList")
 					.removeOne({ _id: ObjectID(id) });
 				return true;
-			}
-		},
-
-		addUserToRestaurant: async (
-			_,
-			{ restaurantId, userId },
-			{ database, user }
-		) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				const restaurant = await database
-					.collection("Restaurant")
-					.findOne({ _id: ObjectID(restaurantId) });
-				if (!restaurant) {
-					return restaurant;
-				} else {
-					const foundUser = restaurant.userIds.find(
-						(databaseId) =>
-							databaseId.toString() === userId.toString()
-					);
-					if (!foundUser) {
-						await database.collection("Restaurant").updateOne(
-							{ _id: ObjectID(restaurantId) },
-							{
-								$push: {
-									userIds: ObjectID(userId),
-								},
-							}
-						);
-						restaurant.userIds.push(ObjectID(userId));
-						return restaurant;
-					} else {
-						return restaurant;
-					}
-				}
-			}
-		},
-
-		addUserToTaskList: async (
-			_,
-			{ taskListId, userId },
-			{ database, user }
-		) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				const TaskList = await database
-					.collection("TaskList")
-					.findOne({ _id: ObjectID(taskListId) });
-				if (!TaskList) {
-					return TaskList;
-				} else {
-					const foundUser = TaskList.userIds.find(
-						(databaseId) =>
-							databaseId.toString() === userId.toString()
-					);
-					if (!foundUser) {
-						await database.collection("TaskList").updateOne(
-							{ _id: ObjectID(taskListId) },
-							{
-								$push: {
-									userIds: ObjectID(userId),
-								},
-							}
-						);
-						TaskList.userIds.push(ObjectID(userId));
-						return TaskList;
-					} else {
-						return TaskList;
-					}
-				}
 			}
 		},
 
