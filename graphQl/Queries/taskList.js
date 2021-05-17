@@ -12,4 +12,14 @@ module.exports = {
 			return taskLists;
 		}
 	},
+
+	getTaskList: async (_, { id }, { database, user }) => {
+		if (!user) {
+			throw new Error("Authentication Error. Please log in");
+		} else {
+			return await database
+				.collection("TaskList")
+				.findOne({ _id: ObjectID(id) });
+		}
+	},
 };

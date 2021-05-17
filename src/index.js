@@ -9,8 +9,8 @@ const {
 	myRestaurants,
 	getRestaurant,
 } = require("../graphQl/Queries/restaurant");
-const { myTaskLists } = require("../graphQl/Queries/taskList");
-
+const { myTaskLists, getTaskList } = require("../graphQl/Queries/taskList");
+const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
 const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
@@ -40,34 +40,8 @@ const resolvers = {
 		myRestaurants,
 		getRestaurant,
 		myTaskLists,
-		getUsers: async (_, { input }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				if (input.text === "") {
-					return [];
-				} else {
-					const foundUsers =
-						(await database.collection("Users").find({
-							email: { $regex: input.text, $options: "i" },
-						})) ||
-						(await database.collection("Users").find({
-							name: { $regex: input.text, $options: "i" },
-						}));
-					return foundUsers ? foundUsers.toArray() : [];
-				}
-			}
-		},
-
-		getTaskList: async (_, { id }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				return await database
-					.collection("TaskList")
-					.findOne({ _id: ObjectID(id) });
-			}
-		},
+		getUsers,
+		getTaskList,
 	},
 
 	Mutation: {
