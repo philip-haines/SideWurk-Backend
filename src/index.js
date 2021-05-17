@@ -14,14 +14,11 @@ const {
 	getRestaurant,
 } = require("../graphQl/Queries/restaurant");
 const { myTaskLists, getTaskList } = require("../graphQl/Queries/taskList");
+const { createTaskList } = require("../graphQl/Mutations/taskList");
 const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
 const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
-
-// const getToken = (user) => {
-// 	return jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "30 days" });
-// };
 
 const getUserFromToken = async (token, database) => {
 	if (!token) {
@@ -51,31 +48,11 @@ const resolvers = {
 	Mutation: {
 		signUp,
 		signIn,
+
 		createRestaurant,
 		addUserToRestaurant,
 
-		createTaskList: async (
-			_,
-			{ title, restaurantId },
-			{ database, user }
-		) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const newTaskList = {
-					title,
-					restaurantId: ObjectID(restaurantId),
-				};
-				console.log(newTaskList);
-				const result = await database
-					.collection("TaskList")
-					.insertOne(newTaskList);
-
-				console.log(result.ops[0]);
-				return result.ops[0];
-			}
-		},
-
+		createTaskList,
 		updateTaskList: async (_, { id, title }, { database, user }) => {
 			if (!user) {
 				throw new Error("Authentication Error. Please log in");
