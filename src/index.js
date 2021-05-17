@@ -14,7 +14,11 @@ const {
 	getRestaurant,
 } = require("../graphQl/Queries/restaurant");
 const { myTaskLists, getTaskList } = require("../graphQl/Queries/taskList");
-const { createTaskList } = require("../graphQl/Mutations/taskList");
+const {
+	createTaskList,
+	updateTaskList,
+	deleteTaskList,
+} = require("../graphQl/Mutations/taskList");
 const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
@@ -53,29 +57,8 @@ const resolvers = {
 		addUserToRestaurant,
 
 		createTaskList,
-		updateTaskList: async (_, { id, title }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				const result = await database
-					.collection("TaskList")
-					.updateOne({ _id: ObjectID(id) }, { $set: { title } });
-				return await database
-					.collection("TaskList")
-					.findOne({ _id: ObjectID(id) });
-			}
-		},
-
-		deleteTaskList: async (_, { id }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				await database
-					.collection("TaskList")
-					.removeOne({ _id: ObjectID(id) });
-				return true;
-			}
-		},
+		updateTaskList,
+		deleteTaskList,
 
 		createTask: async (_, { content, blockId }, { database, user }) => {
 			if (!user) {
