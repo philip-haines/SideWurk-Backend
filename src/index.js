@@ -24,6 +24,13 @@ const {
 	updateTask,
 	deleteTask,
 } = require("../graphQl/Mutations/task");
+const {
+	createBlock,
+	updateBlock,
+	deleteBlock,
+} = require("../graphQl/Mutations/block");
+
+const { User, Restaurant } = require("../graphQl/typeRsolvers");
 const { getUsers } = require("../graphQl/Queries/users");
 dotenv.config();
 
@@ -69,66 +76,13 @@ const resolvers = {
 		updateTask,
 		deleteTask,
 
-		createBlock: async (_, { title, taskListId }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please sign in");
-			} else {
-				const newBlock = {
-					title,
-					taskListId: ObjectID(taskListId),
-				};
-
-				const result = await database
-					.collection("Block")
-					.insertOne(newBlock);
-				return result.ops[0];
-			}
-		},
-
-		updateBlock: async (_, { id, title }, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				const result = await database
-					.collection("Block")
-					.updateOne({ _id: ObjectID(id) }, { $set: { title } });
-				return await database
-					.collection("Block")
-					.findOne({ _id: ObjectID(id) });
-			}
-		},
-
-		deleteBlock: async (_, block, { database, user }) => {
-			if (!user) {
-				throw new Error("Authentication Error. Please log in");
-			} else {
-				await database
-					.collection("Block")
-					.removeOne({ _id: ObjectID(block.id) });
-				return true;
-			}
-		},
+		createBlock,
+		updateBlock,
+		deleteBlock,
 	},
 
-	User: {
-		id: ({ _id, id }) => _id || id,
-	},
-
-	Restaurant: {
-		id: ({ _id, id }) => _id || id,
-		users: async ({ userIds }, _, { database }) =>
-			Promise.all(
-				userIds.map((userId) =>
-					database.collection("Users").findOne({ _id: userId })
-				)
-			),
-
-		taskLists: async ({ _id }, _, { database }) =>
-			await database
-				.collection("TaskList")
-				.find({ restaurantId: ObjectID(_id) })
-				.toArray(),
-	},
+	User,
+	Restaurant,
 
 	TaskList: {
 		id: ({ _id, id }) => _id || id,
