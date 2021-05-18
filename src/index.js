@@ -1,33 +1,15 @@
 const { ApolloServer } = require("apollo-server");
 const { MongoClient } = require("mongodb");
-const dotenv = require("dotenv");
-const jwt = require("jsonwebtoken");
-const typeDefs = require("../graphQl/typeDefs");
-const { Query } = require("../graphQl/Queries/query");
-const { Mutation } = require("../graphQl/Mutations/mutation");
+
 const { getUserFromToken } = require("../graphQl/Mutations/user");
 
-const {
-	User,
-	Restaurant,
-	TaskList,
-	Block,
-	Task,
-} = require("../graphQl/typeResolvers");
+const typeDefs = require("../graphQl/typeDefs");
+const { resolvers } = require("../graphQl/resolver");
+
+const dotenv = require("dotenv");
 dotenv.config();
 
 const { DB_URI, DB_NAME } = process.env;
-
-const resolvers = {
-	Query,
-	Mutation,
-
-	User,
-	Restaurant,
-	TaskList,
-	Block,
-	Task,
-};
 
 const start = async () => {
 	const client = new MongoClient(DB_URI, {
