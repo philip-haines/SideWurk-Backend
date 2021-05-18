@@ -1,3 +1,4 @@
+const { ObjectID } = require("mongodb");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -10,6 +11,21 @@ const getToken = (user) => {
 };
 
 module.exports = {
+	getUserFromToken: async (token, database) => {
+		if (!token) {
+			return null;
+		} else {
+			const tokenData = jwt.verify(token, JWT_SECRET);
+			if (!tokenData.id) {
+				return null;
+			} else {
+				const user = await database
+					.collection("Users")
+					.findOne({ _id: ObjectID(tokenData.id) });
+				return user;
+			}
+		}
+	},
 	signUp: async (_, { input }, { database }) => {
 		const hashedPassword = bcrypt.hashSync(input.password);
 		const newUser = {
