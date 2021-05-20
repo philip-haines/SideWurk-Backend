@@ -15,6 +15,7 @@ module.exports = gql`
 
 		createRestaurant(title: String!): Restaurant!
 		addUserToRestaurant(restaurantId: ID!, userId: ID!): Restaurant!
+		updateRestaurant(id: ID!, title: String!): Restaurant!
 
 		createTaskList(restaurantId: ID!, title: String!): TaskList!
 		updateTaskList(id: ID!, title: String!): TaskList!

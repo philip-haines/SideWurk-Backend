@@ -51,4 +51,17 @@ module.exports = {
 			}
 		}
 	},
+
+	updateRestaurant: async (_, { id, title }, { database, user }) => {
+		if (!user) {
+			throw new Error("Authentication Error. Please log in");
+		} else {
+			const result = await database
+				.collection("Restaurant")
+				.updateOne({ _id: ObjectID(id) }, { $set: { title } });
+			return await database
+				.collection("Restaurant")
+				.findOne({ _id: ObjectID(id) });
+		}
+	},
 };

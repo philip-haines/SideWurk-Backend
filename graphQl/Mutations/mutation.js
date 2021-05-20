@@ -1,5 +1,9 @@
 const { signUp, signIn } = require("./user");
-const { addUserToRestaurant, createRestaurant } = require("./restaurant");
+const {
+	addUserToRestaurant,
+	createRestaurant,
+	updateRestaurant,
+} = require("./restaurant");
 
 const {
 	createTaskList,
@@ -16,6 +20,7 @@ module.exports = {
 
 		createRestaurant,
 		addUserToRestaurant,
+		updateRestaurant,
 
 		createTaskList,
 		updateTaskList,
